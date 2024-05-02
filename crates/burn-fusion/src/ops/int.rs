@@ -1079,6 +1079,31 @@ impl<B: FusionBackend> IntTensorOps<Self> for Fusion<B> {
         out
     }
 
+    fn int_cumsum_dim<const D: usize>(
+        tensor: IntTensor<Self, D>,
+        dim: usize,
+    ) -> IntTensor<Self, D> {
+        scalar_int_ops!(CumSumDimOps, B::int_sum_dim, usize, noconvert);
+
+        let stream = tensor.stream;
+        let mut shape = tensor.shape.clone();
+        shape[dim] = 1;
+        let out = tensor.client.tensor_uninitialized(shape);
+
+        let desc = ScalarOperationDescription {
+            lhs: tensor.into_description(),
+            rhs: dim,
+            out: out.to_description_out(),
+        };
+        out.client.register(
+            vec![stream],
+            OperationDescription::NumericInt(NumericOperationDescription::CumSumDim(desc.clone())),
+            CumSumDimOps::<D>::new(desc),
+        );
+
+        out
+    }
+
     fn int_prod<const D: usize>(tensor: IntTensor<Self, D>) -> IntTensor<Self, 1> {
         unary_int_ops!(ProdOps, B::int_prod);
 

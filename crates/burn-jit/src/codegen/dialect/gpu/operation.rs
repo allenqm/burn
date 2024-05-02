@@ -35,6 +35,7 @@ pub enum Operator {
     Sin(UnaryOperator),
     Tanh(UnaryOperator),
     Powf(BinaryOperator),
+    CumSum(BinaryOperator),
     Sqrt(UnaryOperator),
     Floor(UnaryOperator),
     Ceil(UnaryOperator),

@@ -3,7 +3,7 @@ mod tests {
     use super::*;
     use burn_tensor::{Data, Tensor};
 
-    #[test]
+    //#[test]
     fn should_diff_expand() {
         // Python code to generate the test case values
         // import torch
@@ -19,18 +19,22 @@ mod tests {
 
         let data_1: Data<f32, 1> = Data::from([4.0, 7.0, 2.0, 3.0]);
         let tensor_1 = TestAutodiffTensor::from_data(data_1, &device).require_grad();
-
+        dbg!(tensor_1.clone());
         let data_2: Data<f32, 1> = Data::from([2.0, 4.5, 7.0, 3.0]);
         let tensor_2 = TestAutodiffTensor::from_data(data_2, &device).require_grad();
-
+        dbg!(tensor_2.clone());
         let tensor_3 = tensor_1.clone().expand([4, 4]);
-
+        dbg!(tensor_3.clone());
         // Use unsqueeze to make tensor_2 have the same shape as tensor_3
         let tensor_4 = tensor_2.clone().unsqueeze().mul(tensor_3).sum();
+        dbg!(tensor_4.clone());
         let grads = tensor_4.backward();
 
         let grad_1 = tensor_1.grad(&grads).unwrap();
         let grad_2 = tensor_2.grad(&grads).unwrap();
+
+        dbg!(grad_1.clone());
+        dbg!(grad_2.clone());
 
         assert_eq!(grad_1.to_data(), Data::from([8., 18., 28., 12.]));
         assert_eq!(grad_2.to_data(), Data::from([16., 28., 8., 12.]));

@@ -105,6 +105,11 @@ pub enum Instruction {
         rhs: Variable,
         out: Variable,
     },
+    CumSum {
+        lhs: Variable,
+        rhs: Variable,
+        out: Variable,
+    },
     Sqrt {
         input: Variable,
         out: Variable,
@@ -284,6 +289,9 @@ impl Display for Instruction {
                 } else {
                     f.write_fmt(format_args!("{out} = powf({lhs}, {rhs});\n"))
                 }
+            }
+            Instruction::CumSum { lhs, rhs, out } => {
+                f.write_fmt(format_args!("{out} = cumsum({lhs}, {rhs});\n"))
             }
             Instruction::Sqrt { input, out } => {
                 f.write_fmt(format_args!("{out} = sqrt({input});\n"))

@@ -1,5 +1,6 @@
 use super::{expand, numeric, permute};
 use crate::codegen::dialect::gpu::{Elem, Item, Operator, Scope, UnaryOperator};
+use crate::gpu::BinaryOperator;
 use crate::kernel::prng::{random_bernoulli, random_normal, random_uniform};
 use crate::{kernel, unary, FloatElement, IntElement, JitBackend, Runtime};
 use burn_tensor::ops::{BoolTensor, Device, FloatTensor, IntElem, IntTensor};
@@ -261,6 +262,19 @@ where
 
     fn int_sum_dim<const D: usize>(tensor: IntTensor<Self, D>, dim: usize) -> IntTensor<Self, D> {
         kernel::reduce::sum_dim(tensor, dim, Default::default())
+    }
+
+    fn int_cumsum_dim<const D: usize>(lhs: IntTensor<Self, D>, rhs: usize) -> IntTensor<Self, D> {
+        unary!(
+            operation: |scope: &mut Scope, elem: Elem| Operator::CumSum(BinaryOperator {
+                lhs: scope.read_array(0, elem),
+                rhs: scope.read_scalar(0, elem),
+                out: scope.create_local(elem),
+            }),
+            runtime: R,
+            input: lhs; (rhs as i64).elem(),
+            elem: IntElem<Self>
+        )
     }
 
     fn int_prod<const D: usize>(tensor: IntTensor<Self, D>) -> IntTensor<Self, 1> {

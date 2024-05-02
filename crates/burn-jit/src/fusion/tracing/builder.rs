@@ -288,6 +288,11 @@ impl TraceBuilder {
                         &mut local_tensor_ids_input,
                         &mut local_tensor_ids_output,
                     ),
+                    gpu::Operator::CumSum(op) => mark_binary(
+                        op,
+                        &mut local_tensor_ids_input,
+                        &mut local_tensor_ids_output,
+                    ),
                     gpu::Operator::Recip(op) => mark_unary(
                         op,
                         &mut local_tensor_ids_input,

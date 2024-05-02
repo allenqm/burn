@@ -366,6 +366,22 @@ where
         )
     }
 
+    fn float_cumsum_dim<const D: usize>(
+        lhs: FloatTensor<Self, D>,
+        rhs: usize,
+    ) -> FloatTensor<Self, D> {
+        unary!(
+            operation: |scope: &mut Scope, elem: Elem| Operator::CumSum(BinaryOperator {
+                lhs: scope.read_array(0, elem),
+                rhs: scope.read_scalar(0, elem),
+                out: scope.create_local(elem),
+            }),
+            runtime: R,
+            input: lhs; (rhs as i64).elem(),
+            elem: FloatElem<Self>
+        )
+    }
+
     fn float_powf_scalar<const D: usize>(
         lhs: FloatTensor<Self, D>,
         rhs: f32,

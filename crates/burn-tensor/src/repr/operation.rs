@@ -318,6 +318,12 @@ pub enum NumericOperationDescription<E> {
 
     /// Operation corresponding to:
     ///
+    /// Float => [sum dim](crate::ops::FloatTensorOps::float_cumsum_dim).
+    /// Int => [sum dim](crate::ops::IntTensorOps::int_cumsum_dim).
+    CumSumDim(ScalarOperationDescription<usize>),
+
+    /// Operation corresponding to:
+    ///
     /// Float => [prod](crate::ops::FloatTensorOps::float_prod).
     /// Int => [prod](crate::ops::IntTensorOps::int_prod).
     Prod(UnaryOperationDescription),
@@ -1208,6 +1214,9 @@ impl<E: Element> NumericOperationDescription<E> {
             NumericOperationDescription::SumDim(desc) => {
                 vec![&desc.lhs, &desc.out]
             }
+            NumericOperationDescription::CumSumDim(desc) => {
+                vec![&desc.lhs, &desc.out]
+            }
             NumericOperationDescription::Prod(desc) => {
                 vec![&desc.input, &desc.out]
             }
@@ -1432,6 +1441,7 @@ impl<E> core::hash::Hash for NumericOperationDescription<E> {
             NumericOperationDescription::Mean(desc) => desc.hash(state),
             NumericOperationDescription::Sum(desc) => desc.hash(state),
             NumericOperationDescription::SumDim(desc) => desc.hash(state),
+            NumericOperationDescription::CumSumDim(desc) => desc.hash(state),
             NumericOperationDescription::Prod(desc) => desc.hash(state),
             NumericOperationDescription::ProdDim(desc) => desc.hash(state),
             NumericOperationDescription::EqualElem(desc) => desc.hash(state),

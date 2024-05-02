@@ -338,6 +338,13 @@ impl<E: FloatNdArrayElement> FloatTensorOps<Self> for NdArray<E> {
         NdArrayMathOps::sum_dim(tensor, dim)
     }
 
+    fn float_cumsum_dim<const D: usize>(
+        tensor: NdArrayTensor<E, D>,
+        dim: usize,
+    ) -> NdArrayTensor<E, D> {
+        panic!("Not supported by NdArray")
+    }
+
     fn float_argmax<const D: usize>(
         tensor: NdArrayTensor<E, D>,
         dim: usize,
