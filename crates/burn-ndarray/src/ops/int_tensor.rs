@@ -7,7 +7,7 @@ use burn_tensor::{Distribution, Reader};
 
 use burn_tensor::ElementConversion;
 use core::ops::Range;
-use ndarray::IntoDimension;
+use ndarray::{Axis, IntoDimension};
 
 // Current crate
 use crate::element::ExpElement;
@@ -290,7 +290,11 @@ impl<E: FloatNdArrayElement> IntTensorOps<Self> for NdArray<E> {
         tensor: NdArrayTensor<i64, D>,
         dim: usize,
     ) -> NdArrayTensor<i64, D> {
-        panic!("Not supported by NdArray")
+        let mut array = tensor.array.clone().into_owned();
+
+        array.accumulate_axis_inplace(Axis(dim), |&prev, curr| *curr += prev);
+
+        NdArrayTensor::new(array.to_shared())
     }
 
     fn int_prod<const D: usize>(tensor: NdArrayTensor<i64, D>) -> NdArrayTensor<i64, 1> {

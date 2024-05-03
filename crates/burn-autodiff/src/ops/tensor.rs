@@ -1605,9 +1605,9 @@ impl<B: Backend, C: CheckpointStrategy> FloatTensorOps<Self> for Autodiff<B, C> 
         dim: usize,
     ) -> FloatTensor<Self, D> {
         #[derive(Debug)]
-        struct SumDim;
+        struct CumSumDim;
 
-        impl<B: Backend, const D: usize> Backward<B, D, 1> for SumDim {
+        impl<B: Backend, const D: usize> Backward<B, D, 1> for CumSumDim {
             type State = (Shape<D>, usize);
 
             fn backward(
@@ -1619,22 +1619,22 @@ impl<B: Backend, C: CheckpointStrategy> FloatTensorOps<Self> for Autodiff<B, C> 
                 let (shape, dim) = ops.state;
 
                 unary::<B, D, D, _>(ops.parents, ops.node, grads, |grad| {
-                    let reverse_grad = B::float_flip(grad, &[dim]);
-                    B::float_sum_dim(reverse_grad, dim)
+                    let cumsum_grad = B::float_cumsum_dim(grad.clone(), dim);
+                    B::float_flip(cumsum_grad.clone(), &[dim])
                 });
             }
         }
 
-        match SumDim
+        match CumSumDim
             .prepare::<C>([tensor.node])
             .compute_bound()
             .stateful()
         {
             OpsKind::Tracked(prep) => prep.finish(
                 (B::float_shape(&tensor.primitive), dim),
-                B::float_sum_dim(tensor.primitive, dim),
+                B::float_cumsum_dim(tensor.primitive, dim),
             ),
-            OpsKind::UnTracked(prep) => prep.finish(B::float_sum_dim(tensor.primitive, dim)),
+            OpsKind::UnTracked(prep) => prep.finish(B::float_cumsum_dim(tensor.primitive, dim)),
         }
     }
 

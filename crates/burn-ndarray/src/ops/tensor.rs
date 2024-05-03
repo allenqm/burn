@@ -1,7 +1,7 @@
 // Language
 use alloc::vec::Vec;
 use core::ops::Range;
-use ndarray::IntoDimension;
+use ndarray::{Axis, IntoDimension};
 
 // Current crate
 use super::{matmul::matmul, NdArrayMathOps, NdArrayOps};
@@ -342,7 +342,11 @@ impl<E: FloatNdArrayElement> FloatTensorOps<Self> for NdArray<E> {
         tensor: NdArrayTensor<E, D>,
         dim: usize,
     ) -> NdArrayTensor<E, D> {
-        panic!("Not supported by NdArray")
+        let mut array = tensor.array.clone().into_owned();
+
+        array.accumulate_axis_inplace(Axis(dim), |&prev, curr| *curr += prev);
+
+        NdArrayTensor::new(array.to_shared())
     }
 
     fn float_argmax<const D: usize>(
