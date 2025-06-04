@@ -29,6 +29,13 @@ std = ["rand/std", "half/std", "num-traits/std", "burn-common/std", "colored"]
 burn-common = { path = "../burn-common", version = "0.18.0", default-features = false }
 burn-tensor-testgen = { path = "../burn-tensor-testgen", version = "0.18.0", optional = true }
 cubecl = { workspace = true, optional = true, default-features = false }
+# TODO(aqm): There shouldn't be backend specific deps in this crate
+cudarc = { version = "0.16.3", features = [
+    "std",
+    "driver",
+    "cuda-version-from-build-system",
+    "dynamic-loading",
+], default-features = false }
 
 bytemuck = { workspace = true, features = ["extern_crate_alloc"] }
 colored = { workspace = true, optional = true }
