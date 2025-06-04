@@ -37,6 +37,34 @@ impl<B: FusionBackend> FloatTensorOps<Self> for Fusion<B> {
         out
     }
 
+    fn float_from_ext_data(
+        desc: burn_tensor::ops::ExternalMemoryDescriptor,
+        device: &Device<Self>,
+    ) -> Result<FloatTensor<Self>, burn_tensor::ops::ExternalMemoryError> {
+        let stream = StreamId::current();
+        let client = get_client::<B>(&device.clone());
+
+        // Call the underlying backend for tensor
+        let tensor = B::float_from_ext_data(desc, device)?;
+        let shape = tensor.shape();
+        // TODO(aqm): Should this come from the desc?
+        let dtype = tensor.dtype();
+        let handle = B::float_tensor_handle(tensor);
+
+        // Register with fusion client
+        let out = client.register_tensor(handle, shape.dims, stream, dtype);
+        let desc_ir = out.to_ir_out();
+
+        // Register as an init operation since the tensor is already created
+        client.register(
+            vec![stream],
+            OperationIr::Init(InitOperationIr { out: desc_ir }),
+            NoOp::<B>::new(),
+        );
+
+        Ok(out)
+    }
+
     fn float_random(
         shape: Shape,
         distribution: Distribution,
