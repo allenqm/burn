@@ -10,7 +10,10 @@ use crate::{
     element::BoolElement,
     kernel::matmul::{MatmulStrategy, matmul},
 };
-use burn_tensor::ops::{BoolTensor, Device, FloatElem, FloatTensor, IntTensor};
+use burn_tensor::ops::{
+    BoolTensor, Device, ExternalMemoryDescriptor, ExternalMemoryError, FloatElem, FloatTensor,
+    IntTensor,
+};
 use burn_tensor::{DType, ElementConversion, FloatDType};
 use burn_tensor::{Distribution, Shape, TensorData, ops::FloatTensorOps};
 use cubecl::prelude::*;
@@ -33,6 +36,43 @@ where
             }
             _ => unimplemented!("Unsupported dtype for `float_from_data`"),
         }
+    }
+
+    fn float_from_ext_data(
+        desc: burn_tensor::ops::ExternalMemoryDescriptor,
+        device: &Device<Self>,
+    ) -> Result<FloatTensor<Self>, burn_tensor::ops::ExternalMemoryError> {
+        // Destructure or return early if it's not a CudaPtr
+        let burn_tensor::ops::ExternalMemoryDescriptor::CudaPtr {
+            ptr,
+            size_bytes,
+            shape,
+            elem_size,
+            dtype,
+        } = desc
+        else {
+            return Err(ExternalMemoryError::UnsupportedMemoryType);
+        };
+
+        let client = R::client(device);
+        let handle = client
+            .create_from_external_memory(cubecl::server::ExternalMemoryDescriptor::CudaPtr {
+                ptr,
+                size_bytes,
+                shape: shape.clone(),
+                elem_size,
+            })
+            .expect("We can get a handle from external memory");
+
+        let cube_tensor = FloatTensor::<Self>::new_contiguous(
+            client,
+            device.clone(),
+            shape.into(),
+            handle,
+            dtype,
+        );
+
+        Ok(cube_tensor)
     }
 
     fn float_random(

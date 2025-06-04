@@ -1,6 +1,9 @@
 use super::cat::cat_with_slice_assign;
 use super::repeat_dim::repeat_with_slice_assign;
-use super::{BoolTensor, Device, FloatElem, FloatTensor, IntElem, IntTensor};
+use super::{
+    BoolTensor, Device, ExternalMemoryDescriptor, ExternalMemoryError, FloatElem, FloatTensor,
+    IntElem, IntTensor,
+};
 use crate::{Distribution, ElementConversion, Float, TensorData, backend::Backend, tensor::Shape};
 use crate::{FloatDType, TensorMetadata, TensorPrimitive};
 use alloc::vec::Vec;
@@ -21,6 +24,29 @@ pub trait FloatTensorOps<B: Backend> {
     ///
     /// The tensor with the given data.
     fn float_from_data(data: TensorData, device: &Device<B>) -> FloatTensor<B>;
+
+    /// Creates a new tensor from GPU data produced by a process
+    /// separate from burn (e.g. a renderer, or image processor)
+    ///
+    /// For now, it's assumed Cudarc is managing this memory and can
+    /// produce a pointer to it
+    ///
+    /// # Arguments
+    ///
+    /// * `desc` - A description of the external memory, different external processes
+    /// may have different types for their pointers
+    /// * `device` - The device to create the tensor on.
+    ///
+    /// # Returns
+    ///
+    /// The tensor with the given data.
+    // TODO(aqm): Provide impls for all backends if that is the convention in burn
+    fn float_from_ext_data(
+        desc: ExternalMemoryDescriptor,
+        device: &Device<B>,
+    ) -> Result<FloatTensor<B>, ExternalMemoryError> {
+        Err(ExternalMemoryError::UnsupportedMemoryType)
+    }
 
     /// Creates a new tensor with random values.
     ///
