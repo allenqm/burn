@@ -14,6 +14,7 @@ use serde::{Deserialize, Deserializer};
 
 use serde::{Serialize, Serializer};
 
+use crate::ops::{ExternalMemoryDescriptor, ExternalMemoryError};
 use crate::{
     Bool, ElementConversion, Float, Int, Shape, TensorData, TensorKind, backend::Backend, check,
     ops::Device,
@@ -1076,6 +1077,11 @@ where
             data.shape.as_slice()
         ));
         Self::new(K::from_data(data, device))
+    }
+
+    /// Create a tensor from externally managed GPU data
+    pub fn from_ext_data(desc: ExternalMemoryDescriptor, device: &B::Device) -> Self {
+        Self::new(K::from_ext_data(desc, device).expect("We can load tensor from ext gpu data"))
     }
 
     /// Create a tensor from the given data on the given device enforcing the given data type.
@@ -2405,6 +2411,32 @@ pub trait BasicOps<B: Backend>: TensorKind<B> {
     /// For creating a tensor from data, users should prefer the [Tensor::from_data](Tensor::from_data) function,
     /// which is more high-level and designed for public use.
     fn from_data(data: TensorData, device: &B::Device) -> Self::Primitive;
+
+    /// Creates a new tensor from GPU data produced by a process
+    /// separate from burn (e.g. a renderer, or image processor)
+    ///
+    /// For now, it's assumed Cudarc is managing this memory and can
+    /// produce a pointer to it
+    ///
+    /// # Arguments
+    ///
+    /// * `desc` - A description of the external memory, different external processes
+    /// may have different types for their pointers
+    /// * `device` - The device to create the tensor on.
+    ///
+    /// # Returns
+    ///
+    /// The tensor with the given data.
+    ///
+    /// For creating a tensor from data, users should prefer the [Tensor::from_data](Tensor::from_data) function,
+    /// which is more high-level and designed for public use.
+    // TODO(aqm): Provide impls for all Elem Types (Int, Bool) if that is the convention in burn
+    fn from_ext_data(
+        desc: ExternalMemoryDescriptor,
+        device: &B::Device,
+    ) -> Result<Self::Primitive, ExternalMemoryError> {
+        Err(ExternalMemoryError::UnsupportedMemoryType)
+    }
     /// Creates a tensor from the given data enforcing the given data type.
     ///
     /// # Remarks
@@ -2689,6 +2721,14 @@ impl<B: Backend> BasicOps<B> for Float {
             DType::QFloat(_strategy) => TensorPrimitive::QFloat(B::q_from_data(data, device)),
             _ => TensorPrimitive::Float(B::float_from_data(data.convert::<B::FloatElem>(), device)),
         }
+    }
+
+    //TODO(aqm): Do all float operations need to handle the QFloat case?
+    fn from_ext_data(
+        desc: ExternalMemoryDescriptor,
+        device: &<B as Backend>::Device,
+    ) -> Result<Self::Primitive, ExternalMemoryError> {
+        B::float_from_ext_data(desc, device).map(|r| TensorPrimitive::Float(r))
     }
 
     fn from_data_dtype(data: TensorData, device: &B::Device, dtype: DType) -> Self::Primitive {
