@@ -11,8 +11,7 @@ use crate::{
     kernel::matmul::{MatmulStrategy, matmul},
 };
 use burn_tensor::ops::{
-    BoolTensor, Device, ExternalMemoryDescriptor, ExternalMemoryError, FloatElem, FloatTensor,
-    IntTensor,
+    BoolTensor, Device, ExternalMemoryError, FloatElem, FloatTensor, IntTensor,
 };
 use burn_tensor::{DType, ElementConversion, FloatDType};
 use burn_tensor::{Distribution, Shape, TensorData, ops::FloatTensorOps};
@@ -43,6 +42,8 @@ where
         device: &Device<Self>,
     ) -> Result<FloatTensor<Self>, burn_tensor::ops::ExternalMemoryError> {
         // Destructure or return early if it's not a CudaPtr
+        // NOTE: this is irrefutable let because only CudaPtr exists as an enum Variant
+        #[allow(irrefutable_let_patterns)]
         let burn_tensor::ops::ExternalMemoryDescriptor::CudaPtr {
             ptr,
             size_bytes,

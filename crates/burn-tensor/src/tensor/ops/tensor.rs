@@ -41,6 +41,7 @@ pub trait FloatTensorOps<B: Backend> {
     ///
     /// The tensor with the given data.
     // TODO(aqm): Provide impls for all backends if that is the convention in burn
+    #[allow(unused_variables)]
     fn float_from_ext_data(
         desc: ExternalMemoryDescriptor,
         device: &Device<B>,

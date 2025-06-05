@@ -2431,6 +2431,7 @@ pub trait BasicOps<B: Backend>: TensorKind<B> {
     /// For creating a tensor from data, users should prefer the [Tensor::from_data](Tensor::from_data) function,
     /// which is more high-level and designed for public use.
     // TODO(aqm): Provide impls for all Elem Types (Int, Bool) if that is the convention in burn
+    #[allow(unused_variables)]
     fn from_ext_data(
         desc: ExternalMemoryDescriptor,
         device: &B::Device,
